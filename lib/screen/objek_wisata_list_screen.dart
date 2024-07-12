@@ -2,9 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'edit_objek_wisata_screen.dart';
-import 'tambah_objek_screen.dart'; // Import halaman edit
+import 'tambah_objek_screen.dart';
 
 class ObjekWisataListScreen extends StatefulWidget {
   @override
@@ -21,16 +20,13 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
     });
 
     try {
-      // Mengambil token dari SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      // Memastikan token tersedia sebelum mengirim permintaan
       if (token == null) {
         throw Exception('Token tidak tersedia');
       }
 
-      // Membuat permintaan HTTP ke endpoint objek wisata
       final response = await http.get(
         Uri.parse('http://10.11.9.25:8080/api/objekwisata'),
         headers: {
@@ -39,7 +35,6 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Parsing data JSON ke dalam list objek wisata
         List<dynamic> data = jsonDecode(response.body);
         setState(() {
           objekWisataList = data;
@@ -73,16 +68,13 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
 
   Future<void> _deleteObjekWisata(int id) async {
     try {
-      // Mengambil token dari SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token');
 
-      // Memastikan token tersedia sebelum mengirim permintaan
       if (token == null) {
         throw Exception('Token tidak tersedia');
       }
 
-      // Membuat permintaan HTTP delete ke endpoint objek wisata berdasarkan ID
       final response = await http.delete(
         Uri.parse('http://10.11.9.25:8080/api/objekwisata/$id'),
         headers: {
@@ -91,7 +83,6 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
       );
 
       if (response.statusCode == 200) {
-        // Refresh list objek wisata setelah delete berhasil
         _fetchObjekWisata();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Objek Wisata berhasil dihapus')),
@@ -126,7 +117,6 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
         builder: (context) => EditObjekWisataScreen(objekWisata: objekWisata),
       ),
     ).then((result) {
-      // Refresh list objek wisata setelah edit
       if (result ?? false) {
         _fetchObjekWisata();
       }
@@ -139,6 +129,10 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
     _fetchObjekWisata();
   }
 
+  void _refreshList() {
+    _fetchObjekWisata();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -146,28 +140,24 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
         title: Text('Objek Wisata'),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke halaman tambah objek wisata
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => TambahObjekWisataScreen(),
+              builder: (context) => TambahObjekWisataScreen(refreshList: _refreshList),
             ),
-          ).then((result) {
-            // Refresh list objek wisata setelah tambah
-            if (result ?? false) {
-              _fetchObjekWisata();
-            }
-          });
+          );
+
+          if (result == true) {
+            _fetchObjekWisata();
+          }
         },
         child: Icon(Icons.add),
       ),
       body: _isLoading
           ? Center(child: CircularProgressIndicator())
           : objekWisataList.isEmpty
-              ? Center(
-                  child: Text('Data objek wisata kosong'),
-                )
+              ? Center(child: Text('Data objek wisata kosong'))
               : ListView.builder(
                   itemCount: objekWisataList.length,
                   itemBuilder: (context, index) {
@@ -187,7 +177,6 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
-                              // Konfirmasi dialog sebelum menghapus
                               showDialog(
                                 context: context,
                                 builder: (context) => AlertDialog(
@@ -205,8 +194,7 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
                                       child: Text('Hapus'),
                                       onPressed: () {
                                         Navigator.of(context).pop();
-                                        _deleteObjekWisata(
-                                            objekWisata['id']);
+                                        _deleteObjekWisata(objekWisata['id']);
                                       },
                                     ),
                                   ],
@@ -216,9 +204,6 @@ class _ObjekWisataListScreenState extends State<ObjekWisataListScreen> {
                           ),
                         ],
                       ),
-                      onTap: () {
-                        // Handle jika ingin menampilkan detail objek wisata
-                      },
                     );
                   },
                 ),

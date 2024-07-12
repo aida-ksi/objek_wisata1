@@ -4,6 +4,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class TambahObjekWisataScreen extends StatefulWidget {
+  final Function refreshList; // Function to refresh the list
+
+  TambahObjekWisataScreen({required this.refreshList});
+
   @override
   _TambahObjekWisataScreenState createState() =>
       _TambahObjekWisataScreenState();
@@ -36,7 +40,7 @@ class _TambahObjekWisataScreenState extends State<TambahObjekWisataScreen> {
       Map<String, dynamic> newData = {
         'nama_objek_wisata': _namaController.text.trim(),
         'kategori': _kategoriController.text.trim(),
-        'lokasi': _lokasiController.text.trim(),
+        'alamat': _lokasiController.text.trim(),
         'detail': _detailController.text.trim(),
         'adminId': 1, // Contoh: Menggunakan adminId yang sudah diketahui (sesuaikan dengan aturan aplikasi Anda)
       };
@@ -51,17 +55,22 @@ class _TambahObjekWisataScreenState extends State<TambahObjekWisataScreen> {
         body: jsonEncode(newData),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         // Objek wisata berhasil ditambahkan
         Map<String, dynamic> responseData = jsonDecode(response.body);
         // Update newData dengan data yang telah ditambahkan oleh server
         newData.addAll(responseData);
-        
+
+        // Panggil fungsi refreshList untuk memperbarui daftar objek wisata
+        widget.refreshList();
+
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Objek Wisata berhasil ditambahkan')),
         );
         Navigator.pop(context, true); // Kembali ke halaman sebelumnya dengan status berhasil
       } else {
+        // Log error message from response body
+        print('Error: ${response.body}');
         throw Exception('Gagal menambahkan objek wisata: ${response.statusCode}');
       }
     } catch (error) {
@@ -113,7 +122,7 @@ class _TambahObjekWisataScreenState extends State<TambahObjekWisataScreen> {
                   SizedBox(height: 12.0),
                   TextField(
                     controller: _lokasiController,
-                    decoration: InputDecoration(labelText: 'Lokasi'),
+                    decoration: InputDecoration(labelText: 'Alamat'), // Mengubah 'Lokasi' menjadi 'Alamat'
                   ),
                   SizedBox(height: 12.0),
                   TextField(
